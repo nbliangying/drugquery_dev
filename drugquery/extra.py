@@ -16,3 +16,4 @@ def get_similar_cpds(query_mol, ref_cpds):
         if tan >= similarity_cutoff:
             similar_cpds.append((cpd, tan))
     return similar_cpds
+

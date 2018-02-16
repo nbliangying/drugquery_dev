@@ -20,50 +20,59 @@ def flatten(l_2d):
 
 
 class Gene(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=20)
+    num_pdbs = models.IntegerField(default=0)
+    num_targets = models.IntegerField(default=0)
+    num_pockets = models.IntegerField(default=0)
+    num_dockings = models.IntegerField(default=0)
+    num_compounds = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
 
-    # functions to return all the Pdb/Target/Pocket/Docking objects associated with this Gene
+    # # functions to return all the Pdb/Target/Pocket/Docking objects associated with this Gene
     def get_pdbs(self):
         return self.pdb_set.all()
-
+    #
     def get_targets(self):
         return flatten([ pdb.target_set.all() for pdb in self.get_pdbs() ])
-
-    def get_pockets(self):
-        return flatten([ target.pocket_set.all() for target in self.get_targets() ])
-
-    def get_dockings(self):
-        return flatten([ pocket.docking_set.all() for pocket in self.get_pockets() ])
-
-    def get_compounds(self):
-        all_compounds = [ docking.compound for docking in self.get_dockings() ]
-        unique_compounds = list(set(all_compounds))
-        return unique_compounds
-
-    # functions to return the number of Pdb/Target/Pocket/Docking/Compound objects associated with this gene
-    def num_pdbs(self):
-        return len(self.get_pdbs())
-
-    def num_targets(self):
-        return len(self.get_targets())
-
-    def num_pockets(self):
-        return len(self.get_pockets())
-
-    def num_dockings(self):
-        return len(self.get_dockings())
-
-    def num_compounds(self):
-        return len(self.get_compounds())
+    #
+    # def get_pockets(self):
+    #     return flatten([ target.pocket_set.all() for target in self.get_targets() ])
+    #
+    # def get_dockings(self):
+    #     return flatten([ pocket.docking_set.all() for pocket in self.get_pockets() ])
+    #
+    # def get_compounds(self):
+    #     all_compounds = [ docking.compound for docking in self.get_dockings() ]
+    #     unique_compounds = list(set(all_compounds))
+    #     return unique_compounds
+    #
+    # # functions to return the number of Pdb/Target/Pocket/Docking/Compound objects associated with this gene
+    # def num_pdbs(self):
+    #     return len(self.get_pdbs())
+    #
+    # def num_targets(self):
+    #     return len(self.get_targets())
+    #
+    # def num_pockets(self):
+    #     return len(self.get_pockets())
+    #
+    # def num_dockings(self):
+    #     return len(self.get_dockings())
+    #
+    # def num_compounds(self):
+    #     return len(self.get_compounds())
 
 
 class Pdb(models.Model):
     gene = models.ForeignKey(Gene, on_delete=models.CASCADE)
-    pdb_id = models.CharField(max_length=200)
-    name = models.CharField(max_length=300)
+    pdb_id = models.CharField(max_length=10)
+    name = models.CharField(max_length=31)
+    num_targets = models.IntegerField(default=0)
+    num_pockets = models.IntegerField(default=0)
+    num_dockings = models.IntegerField(default=0)
+    num_compounds = models.IntegerField(default=0)
 
     # define the name upon save
     def save(self, *args, **kwargs):
@@ -74,14 +83,15 @@ class Pdb(models.Model):
     def __str__(self):
         return self.name
 
-    #returns the number of pdbs
-
 
 class Target(models.Model):
     pdb = models.ForeignKey(Pdb, on_delete=models.CASCADE)
-    chain = models.CharField(max_length=50)
+    chain = models.CharField(max_length=4)
     target_file = models.FileField(upload_to='targets')
-    name = models.CharField(max_length=400)
+    name = models.CharField(max_length=42)
+    num_pockets = models.IntegerField(default=0)
+    num_dockings = models.IntegerField(default=0)
+    num_compounds = models.IntegerField(default=0)
 
     # define the name upon save
     def save(self, *args, **kwargs):
@@ -92,15 +102,14 @@ class Target(models.Model):
     def __str__(self):
         return self.name
 
-    def num_pockets(self):
-        return len(self.pocket_set.all())
-
 
 class Pocket(models.Model):
     target = models.ForeignKey(Target, on_delete=models.CASCADE)
     pocket_number = models.IntegerField()
     pocket_file = models.FileField(upload_to='pockets')
-    name = models.CharField(max_length=500)
+    name = models.CharField(max_length=52)
+    num_dockings = models.IntegerField(default=0)
+    num_compounds = models.IntegerField(default=0)
 
     # define the name upon save
     def save(self, *args, **kwargs):
@@ -196,11 +205,24 @@ class Upload(models.Model):
                 return cpd.pk
 
 
+
 class Compound(models.Model):
     smiles = models.CharField(max_length=500)
     compound_sdf_file = models.FileField(upload_to='compounds')
     compound_img_file = models.FileField(upload_to='images')
     score_file = models.FileField(upload_to='scores')
+
+    num_docked_genes = models.IntegerField(default=0)
+    num_docked_pdbs = models.IntegerField(default=0)
+    num_docked_targets = models.IntegerField(default=0)
+    num_docked_pockets = models.IntegerField(default=0)
+
+    best_gene = models.ForeignKey(Gene, null=True, on_delete=models.SET_NULL)
+    best_pdb = models.ForeignKey(Pdb, null=True, on_delete=models.SET_NULL)
+    best_target = models.ForeignKey(Target, null=True, on_delete=models.SET_NULL)
+    best_pocket = models.ForeignKey(Pocket, null=True, on_delete=models.SET_NULL)
+    best_docking = models.ForeignKey('Docking', related_name='+', null=True, on_delete=models.SET_NULL)
+
 
     # where to go when we create the model
     def get_absolute_url(self):
@@ -272,47 +294,48 @@ class Compound(models.Model):
         self.save()
 
 
+
     # functions to tell you which / how many targets this cpd has been docked to
-    def docked_pockets(self):
+    def get_docked_pockets(self):
         cpd_dockings = self.docking_set.all()
         return [docking.pocket for docking in cpd_dockings]
 
     # returns a list of Pockets that have NOT been docked against
-    def undocked_pockets(self):
-        docked_pockets = self.docked_pockets()
+    def get_undocked_pockets(self):
+        docked_pockets = self.get_docked_pockets()
         undocked_pockets = [ pocket for pocket in Pocket.objects.all() if pocket not in docked_pockets ]
         return undocked_pockets
 
-    def num_undocked_pockets(self):
-        return len(self.undocked_pockets())
+    def get_num_undocked_pockets(self):
+        return len(self.get_undocked_pockets())
 
-    def docked_targets(self):
-        docked_targets = [ pocket.target for pocket in self.docked_pockets() ]
+    def get_docked_targets(self):
+        docked_targets = [ pocket.target for pocket in self.get_docked_pockets() ]
         return list(set(docked_targets))
 
-    def docked_pdbs(self):
-        docked_pdbs = [ target.pdb for target in self.docked_targets() ]
+    def get_docked_pdbs(self):
+        docked_pdbs = [ target.pdb for target in self.get_docked_targets() ]
         return list(set(docked_pdbs))
 
-    def docked_genes(self):
-        docked_genes = [ pdb.gene for pdb in self.docked_pdbs() ]
+    def get_docked_genes(self):
+        docked_genes = [ pdb.gene for pdb in self.get_docked_pdbs() ]
         return list(set(docked_genes))
 
-    def num_docked_pockets(self):
-        return len(self.docked_pockets())
+    def get_num_docked_pockets(self):
+        return len(self.get_docked_pockets())
 
-    def num_docked_targets(self):
-        return len(self.docked_targets())
+    def get_num_docked_targets(self):
+        return len(self.get_docked_targets())
 
-    def num_docked_pdbs(self):
-        return len(self.docked_pdbs())
+    def get_num_docked_pdbs(self):
+        return len(self.get_docked_pdbs())
 
-    def num_docked_genes(self):
-        return len(self.docked_genes())
+    def get_num_docked_genes(self):
+        return len(self.get_docked_genes())
 
 
     # functions return the docking/pocket/target/pdb/gene that produced the best docking score
-    def best_docking(self):
+    def get_best_docking(self):
         all_dockings = self.docking_set.all()
         try:
             best_docking = min(all_dockings, key=attrgetter('top_score'))
@@ -320,30 +343,30 @@ class Compound(models.Model):
             best_docking = None
         return best_docking
 
-    def best_pocket(self):
+    def get_best_pocket(self):
         try:
-            best_pocket = self.best_docking().pocket
+            best_pocket = self.get_best_docking().pocket
         except AttributeError:
             best_pocket = None
         return best_pocket
 
-    def best_target(self):
+    def get_best_target(self):
         try:
-            best_target  = self.best_pocket().target
+            best_target  = self.get_best_pocket().target
         except AttributeError:
             best_target = None
         return best_target
 
-    def best_pdb(self):
+    def get_best_pdb(self):
         try:
-            best_pdb = self.best_target().pdb
+            best_pdb = self.get_best_target().pdb
         except AttributeError:
             best_pdb = None
         return best_pdb
 
-    def best_gene(self):
+    def get_best_gene(self):
         try:
-            best_gene = self.best_pdb().gene
+            best_gene = self.get_best_pdb().gene
         except AttributeError:
             best_gene = None
         return best_gene

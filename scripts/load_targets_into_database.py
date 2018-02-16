@@ -65,6 +65,10 @@ for target_dir in glob.glob(args.genes_dir + '/*/representative_gene_models/*'):
             print('Creating database entry for Pdb: ', target_gene + '_' + target_pdb)
             pdb = gene.pdb_set.create(pdb_id=target_pdb)
 
+            # increment parent model counters
+            gene.num_pdbs += 1
+            gene.save()
+
         # check if the target is in the database. if not, create it
         try:
             target = pdb.target_set.get(chain=target_chain)
@@ -84,8 +88,11 @@ for target_dir in glob.glob(args.genes_dir + '/*/representative_gene_models/*'):
             target.target_file.save(new_target_file_path, target_pdb_file, save=True)
             target.save()
 
-
-        ###             INDENT THIS    ?             ###
+            # increment parent model counters
+            gene.num_targets += 1
+            pdb.num_targets += 1
+            gene.save()
+            pdb.save()
 
         # now we have to load in the docking sites associated with this target
         target_pocket_file_paths = glob.glob(target_dir + '/*cluster*')
@@ -113,7 +120,13 @@ for target_dir in glob.glob(args.genes_dir + '/*/representative_gene_models/*'):
                 pocket.pocket_file.save(new_pocket_file_path, pocket_pdb_file, save=True)
                 pocket.save()
 
-
+                # increment parent model counters
+                gene.num_pockets += 1
+                pdb.num_pockets += 1
+                target.num_pockets += 1
+                gene.save()
+                pdb.save()
+                target.save()
 
 
 

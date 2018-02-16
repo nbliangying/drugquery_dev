@@ -6,7 +6,11 @@ from django.conf.urls.static import static
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^', include('drugquery.urls')),
+    # django silk profiler
+    url(r'^silk/', include('silk.urls', namespace='silk')),
 ]
+
+
 
 # when we're in development, just use these, we'll change it late in production
 if settings.DEBUG:

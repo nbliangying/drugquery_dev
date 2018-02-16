@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     # comment out the next line to access the admin page
     # 'django.contrib.sites',
     'drugquery.apps.DrugqueryConfig',
+    'silk',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -51,6 +52,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'drugquery_dev.urls'

@@ -14,9 +14,6 @@ urlpatterns = [
     # drugquery/about
     url(r'^about$', views.about, name="about"),
 
-    # drugquery/testlayout/
-    url(r'^testlayout/$', views.testLayout, name='testLayout'),
-
     # drugquery/upload/
     url(r'^upload/$', views.UploadCompound.as_view(), name="upload"),
 

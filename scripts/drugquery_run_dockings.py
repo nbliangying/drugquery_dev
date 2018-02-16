@@ -110,6 +110,28 @@ def create_docking_object(outfile):
     docking.docking_file.save(new_docking_file_path, new_docking_file, save=True)
     docking.save()
 
+    # update the parent compound's docking records
+    compound.num_docked_pockets += 1
+
+    cpd_targets = set(compound.get_docked_targets())
+    if pocket.target not in cpd_targets:
+        compound.num_docked_targets += 1
+
+        cpd_pdbs = set([ t.pdb for t in cpd_targets ])
+        if pocket.target.pdb not in cpd_pdbs:
+            compound.num_docked_pdbs += 1
+
+            cpd_genes = set([ p.gene for p in cpd_pdbs ])
+            if pocket.target.pdb.gene not in cpd_genes:
+                compound.num_docked_genes += 1
+
+    compound.save()
+
+    # see if we set a new top docking score
+
+
+    compound.save()
+
     # remove the file from TMP_ROOT so we do not double count it
     os.remove(outfile)
 

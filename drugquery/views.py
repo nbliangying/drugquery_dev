@@ -105,7 +105,7 @@ class CompoundDetailView(generic.DetailView):
 class GeneIndexView(generic.ListView):
     template_name = 'drugquery/genes.html'
     context_object_name = 'all_genes'
-    paginate_by = 100
+    paginate_by = 40
 
     def get_queryset(self):
         sorted_genes = sorted(Gene.objects.all(), key = lambda g: g.name)
@@ -115,10 +115,6 @@ class GeneIndexView(generic.ListView):
 def geneDetailView(request, gene_name):
     gene = get_object_or_404(Gene, name=gene_name)
     return render(request, 'drugquery/gene_detail.html', {'gene': gene})
-
-
-def testLayout(request):
-    return render(request, 'drugquery/testLayout.html')
 
 
 def about(request):
