@@ -1,0 +1,66 @@
+<!-- let django know we want to use the base navbar template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}Queue{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+    <!-- This is the body -->
+    {% if all_jobs %}  <!-- Returns true if we have some albums in the list -->
+        <div class="container">
+            <h2>Queue</h2>
+            <br>
+            <table class="table table-responsive  table-hover">
+                <thead>
+                    <tr>
+                        <th>Submission Time</th>
+                        <th>Compound</th>
+                        <th>Status</th>
+                        <!--<th>Email</th>-->
+                    </tr>
+                </thead>
+                <tbody>
+                {% for job in all_jobs %}
+                    <tr>
+                        <td>{{ job.datetime }}</td>
+                        <td>
+                            <a href="{% url 'drugquery:compound_detail' job.compound.pk %}">{{ job.compound.get_name }}</a>
+                        </td>
+                        <td>{{ job.status }}</td>
+                        <!--<td>{{ job.email }}</td>-->
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            {% if is_paginated %}
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                      <li><a href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                    {% else %}
+                      <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}
+                      {% if page_obj.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                      {% else %}
+                        <li><a href="?page={{ i }}">{{ i }}</a></li>
+                      {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                      <li><a href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                    {% else %}
+                      <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+
+        </div>
+
+    {% else %}
+        <div class="container">
+            <h3>There are no jobs in the DrugQuery queue</h3>
+        </div>
+    {% endif %}
+
+{% endblock %}

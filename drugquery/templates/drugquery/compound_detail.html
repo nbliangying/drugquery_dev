@@ -1,0 +1,194 @@
+<!-- let django know we want to use the base Drugquery template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}Compound Details{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+    <div class="container">
+        <div class="row">
+            <br>
+            <!-- we have to take up 12 columns total, so each column needs to be width 4 -->
+            <!-- we'll make each col medium sized, so use class "col-md-4" -->
+            <div class="col-md-6">
+                <h1>{{ compound.get_name }}</h1>
+                <h5>{{ compound.smiles }}</h5>
+                <h5><form method="get" action="{% url 'drugquery:search_compounds' %}">
+                    <button class="btn btn-default btn-xs" name="smiles_query" type="submit" value="{{ compound.smiles }}">
+                        <span class="glyphicon glyphicon-search"></span> Search DrugQuery for similar compounds
+                    </button>
+                </form></h5>
+
+                <h5><form action="{% url 'drugquery:download_structure' compound.pk %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <button class="btn btn-default btn-xs" type="submit">
+                        <span class="glyphicon glyphicon-download"></span>  Download 3D SDF structure
+                    </button>
+                </form></h5>
+
+            </div>
+
+            <div class="col-md-6">
+                <div style='height:400px; width:600px' class='viewer_3Dmoljs'
+                     data-href="{{ compound.compound_sdf_file.url }}" data-backgroundcolor='0xffffff'
+                     data-style='stick'></div>
+                <br><div style="margin:0 auto; width:30%">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <h2>Docking Summary</h2>
+
+            <h4>Current docking status:
+                <span class="text-muted", style="padding-left:2em">
+                    {{ compound.get_docking_status }}
+                </span><br>
+            </h4>
+            <h4>No. missing dockings:
+                <span class="text-muted", style="padding-left:2.6em">
+                    {{ compound.num_undocked_pockets }}
+                </span><br>
+            </h4>
+
+            {% if compound.score_file %}
+                <h5><form action="{% url 'drugquery:download_scores' compound.pk %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <button class="btn btn-default btn-xs" type="submit" class="btn">
+                        <span class="glyphicon glyphicon-download"></span>  Download complete docking scores
+                    </button>
+                </form></h5>
+            {% endif %}
+
+            {% if compound.get_docking_status == 'Idle' %}
+                <h5><form action="{% url 'drugquery:redock_cpd' compound.pk %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <button class="btn btn-default btn-xs" type="submit" class="btn">
+                        <span class="glyphicon glyphicon-upload"></span>  Dock to missing targets
+                    </button>
+                </form></h5>
+            {% endif %}
+
+
+            <!-- Summary Table -->
+            <br>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Proteins Docked</th>
+                        <th>PDBs Docked</th>
+                        <th>Binding Sites Docked</th>
+                        <th>Predicted Target</th>
+                        <th>PDB ID</th>
+                        <th>Chain</th>
+                        <th>Binding Site</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ compound.num_docked_genes }}</td>
+                        <td>{{ compound.num_docked_pdbs }}</td>
+                        <td>{{ compound.num_docked_pockets }}</td>
+                        <td>{{ compound.best_gene.name }}</td>
+                        <td>{{ compound.best_pdb.pdb_id }}</td>
+                        <td>{{ compound.best_target.chain }}</td>
+                        <td>{{ compound.best_pocket.pocket_number }}</td>
+                        <td>{{ compound.best_docking.top_score }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row">
+
+            <!-- a form to collect which files to download -->
+            <form action="{% url 'drugquery:download_dockings' compound.pk %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <br>
+                <h2>Dockings Performed</h2>
+                <button class="btn btn-default" type="submit" class="btn">
+                    <span class="glyphicon glyphicon-download"></span>&nbsp; Download selected dockings
+                </button>
+                <br><br>
+
+                <!-- input field to filter results by gene name -->
+                <input type="text" id="geneName" class="form-control" onkeyup="filterDockings()"
+                       placeholder="Filter dockings by target gene" title="Type in a gene name"
+                       style="margin-bottom: 1em">
+
+                <div style='height:550px; overflow:auto'>
+                    <table id="dockingTable" class="tablesorter table table-hover">
+                        <thead class="thead-inverse">
+                            <tr>
+                                <th><a href="">Gene</a></th>
+                                <th><a href="">Pdb</a></th>
+                                <th><a href="">Chain</a></th>
+                                <th><a href="">Pocket</a></th>
+                                <th><a href="">Score</a></th>
+                                <th>Download</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                        {% for docking in compound.docking_set.all %}
+                            <tr>
+                                <td>{{ docking.pocket.target.pdb.gene.name }}</td>
+                                <td>{{ docking.pocket.target.pdb.pdb_id }}</td>
+                                <td>{{ docking.pocket.target.chain }}</td>
+                                <td>{{ docking.pocket.pocket_number }}</td>
+                                <td>{{ docking.top_score }}</td>
+                                <td>
+                                    <div class="checkbox">
+                                        <input type="checkbox" name="checks[]" value="{{ docking.pk }}" />
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </form>
+            <br><br>
+        </div>
+
+    </div>
+
+    <!-- make the table sortable by column headers -->
+    <script language="javascript">
+        $(document).ready(function()
+            {
+                $("#dockingTable").tablesorter();
+            }
+        );
+    </script>
+
+    <!-- make the table filterable using search -->
+    <script>
+    function filterDockings() {
+      var input, filter, table, tr, td, i;
+      input = document.getElementById("geneName");
+      filter = input.value.toUpperCase();
+      table = document.getElementById("dockingTable");
+      tr = table.getElementsByTagName("tr");
+      for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[0];
+        if (td) {
+          if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+            tr[i].style.display = "";
+          } else {
+            tr[i].style.display = "none";
+          }
+        }
+      }
+    }
+    </script>
+
+
+
+
+
+{% endblock %}

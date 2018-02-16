@@ -1,0 +1,78 @@
+<!-- let django know we want to use the base navbar template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}About DrugQuery{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+
+<!-- container-fluid takes up the entire width of the screen -->
+<div class="container">
+
+    <h1>About DrugQuery</h1>
+
+
+    <br><h3>Overview</h3>
+        <p>DrugQuery is a human proteome-scale docking and target
+            prediction tool for small molecules.
+            User submitted molecules are docked against the entire structural
+            proteome.
+            Docking score and additional structural filters are used
+            to rank targets by predicted affinity and the ranked
+            results are returned to the user.</p>
+
+    <h3>Input</h3>
+        <p>Users submit their email address and a small molecule in any
+            2D or 3D structure file format recognized by
+            <a target="_blank" href="https://openbabel.org/docs/dev/FileFormats/Overview.html" >Open Babel</a>.
+            Results from previous submissions are stored on the server
+            such that the results can be returned instantaneously if the
+            compound has been submitted before.</p>
+
+    <h3>Docking</h3>
+        <p>Molecular docking is performed with <a target="_blank" href="http://sourceforge.net/p/smina/">smina</a>,
+            a fork of <a target="_blank" href="http://vina.scripps.edu/">Autodock Vina</a> that
+            focuses on improving scoring and minimization. User-submitted
+            small molecules are docked to predicted ‘hot-spots’ on each
+            protein in the DrugQuery database, which indicate where small
+            molecules are most likely to bind to each protein. These
+            ‘hot-spots’ are pre-computed using <a target="_blank" href="http://ftmap.bu.edu/login.php">FTMap</a>
+            to achieve docking efficiency and accuracy above that of global docking.</p>
+
+    <h3>Target Database</h3>
+        <p>The DrugQuery target database is a curated set of human
+            protein crystal structures from the <a target="_blank" href="http://www.rcsb.org/pdb/home/home.do">PDB</a>
+            and currently contains structural models for over 1000 human genes.
+            Multiple structures are used in docking for multi-domain proteins
+            and proteins that exhibit significant flexibility and conformational
+            sampling.</p>
+
+    <h3>Output</h3>
+        <p>After docking results have been compiled, users receive an email with
+            a link to the output results page. Standard DrugQuery output consists
+            of (1) a list of protein targets ranked by the top docking score of
+            the input compound against any of the targets’ ‘hot-spots,’ and (2) a
+            comprehensive, un-ranked log of all docking scores for the input compound
+            against each ‘hot-spot’ on each target in the DrugQuery database.
+            Using an interactive summary table on the results page, users can also
+            elect to download structural docking models for their compound bound
+            to any targets in the database.</p>
+
+    <h3>Acknowledgements</h3>
+        <p>DrugQuery was designed and built by Nicolas A. Pabon with the support of the
+        Camacho Lab at the University of Pittsburgh School of Medicine, Department of
+        Computational and Systems Biology.</p>
+        <p>To cite DrugQuery, please use:</p>
+        <p>This work was supported in part by the U.S. National Institute of Health (grant no.
+            R01GM097082) and by the U.S. National Science Foundation (grant no. 1247842).</p>
+
+    <br><h4>Contact</h4>
+        <p>For support, please email Nicolas Pabon at npabon@pitt.edu.</p>
+
+
+
+
+</div>
+
+
+{% endblock %}

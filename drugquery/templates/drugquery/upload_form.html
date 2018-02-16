@@ -1,0 +1,35 @@
+{% extends 'drugquery/base.html' %}
+{% block title %}Upload Compound{% endblock %}
+
+
+{% block body %}
+<div class="container">
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4>Upload a compound to DrugQuery</h4>
+            <p class="text-muted small">Accepts all molecular file formats recognized by
+                <a href="https://openbabel.org/docs/dev/FileFormats/Overview.html">Open Babel</a>.
+                Only the first compound in the input file will be docked.
+            </p>
+        </div>
+        <div class="panel-body">
+
+            <!-- no action because we save right to the database -->
+            <form class="form-horizontal" action="" method="post" enctype="multipart/form-data" >
+                {% csrf_token %}
+
+                {% include 'drugquery/form_template.html' %}
+
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="submit" class="btn btn-success">Submit</button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+<!-- let django know we want to use the base Drugquery template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}Search Results{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+    <div class="container">
+
+        <span class="text-muted"><h2>SMILES query:
+        <h4><em>{{ smiles_query }}</em></h4></span><br>
+
+        {% if error_message %}
+            <span class="text-danger"><h3>{{ error_message }}</h3></span>
+
+        {% elif not similar_cpds %}
+            <span class="text-danger"><h3>No similar compounds found in DruqQuery database</h3></span>
+
+        {% else %}
+            <h2>Similar compounds in the DrugQuery database:</h2><br>
+            <div class="table-responsive">
+                <table class="table-hover table">
+                    <thead class="thead-inverse">
+                      <tr>
+                        <th>ID</th>
+                        <th>Compound</th>
+                        <th>Tanimoto Similarity</th>
+                        <th>Predicted Target</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for compound, tanimoto in similar_cpds %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'drugquery:compound_detail' compound.pk %}">{{ compound.pk }}</a>
+                            </td>
+                            <td>
+                                <a href="{% url 'drugquery:compound_detail' compound.pk %}">
+                                    <img src="{{ compound.compound_img_file.url }}" class="img-responsive" style="width:70%">
+                                </a>
+
+                            </td>
+                            <td>{{ tanimoto|floatformat:3 }}</td>
+                            <td>{{ compound.best_gene.name }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+{% endblock %}
+
+

@@ -1,0 +1,98 @@
+<!-- let django know we want to use the base navbar template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}Gene Target Index{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+<!-- This is the body -->
+    {% if all_genes %}
+        <div class="container">
+            <h2>Gene targets in the DrugQuery library:</h2>
+            <br>
+
+             <!-- input field to filter results by gene name -->
+            <input type="text" id="geneName" class="form-control" onkeyup="filterGenes()"
+                   placeholder="Filter genes by Uniprot ID" title="Type in a gene name">
+
+            <!--<div style='height:550px; overflow:auto'>-->
+            <div>
+                <table id="geneTable" class="table">
+                    <thead>
+                    <tr>
+                        <th>Gene</th>
+                        <th>No. Representative PDBs</th>
+                        <th>No. Target Structures</th>
+                        <th>No. Pockets</th>
+                        <th>No. Compounds Docked</th>
+                        <!-- MAYBE PUT SOMETHING HERE ABOUT BEST COMPOUNDS or PREDICTED HITS -->
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for gene in all_genes %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'drugquery:gene_detail' gene.name %}">{{ gene.name }}</a>
+                            </td>
+                            <td>{{ gene.num_pdbs }}</td>
+                            <td>{{ gene.num_targets }}</td>
+                            <td>{{ gene.num_pockets }}</td>
+                            <td>{{ gene.num_compounds }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+              </table>
+            </div>
+            {% if is_paginated %}
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                      <li><a href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                    {% else %}
+                      <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}
+                      {% if page_obj.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                      {% else %}
+                        <li><a href="?page={{ i }}">{{ i }}</a></li>
+                      {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                      <li><a href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                    {% else %}
+                      <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+        </div>
+
+            <script>
+                function filterGenes() {
+                  var input, filter, table, tr, td, i;
+                  input = document.getElementById("geneName");
+                  filter = input.value.toUpperCase();
+                  table = document.getElementById("geneTable");
+                  tr = table.getElementsByTagName("tr");
+                  for (i = 0; i < tr.length; i++) {
+                    td = tr[i].getElementsByTagName("td")[0];
+                    if (td) {
+                      if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                      } else {
+                        tr[i].style.display = "none";
+                      }
+                    }
+                  }
+                }
+            </script>
+
+
+    {% else %}
+        <div class="container">
+            <h3>There are no targets in the DrugQuery library</h3>
+        </div>
+    {% endif %}
+
+
+
+{% endblock %}

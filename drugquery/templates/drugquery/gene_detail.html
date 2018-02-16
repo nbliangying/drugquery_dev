@@ -1,0 +1,67 @@
+<!-- let django know we want to use the base Drugquery template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}Gene Details{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+    <div class="container">
+        <h2>{{ gene.name }}</h2>
+        <p><h4>Summary Statistics:</h4></p>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>No. Representative PDB Structures</th>
+                    <th>No. Target models to dock against</th>
+                    <th>No. Potential binding sites</th>
+                    <th>No. Compounds docked</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ gene.num_pdbs }}</td>
+                    <td>{{ gene.num_targets }}</td>
+                    <td>{{ gene.num_pockets }}</td>
+                    <td>{{ gene.num_compounds }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p></p>
+        <h4>Representative structural models:</h4>
+        {% if gene.get_targets %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Structure</th>
+                        <th>Pdb</th>
+                        <th>Chain</th>
+                        <th>No. potential binding Sites</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for target in gene.get_targets %}
+                    <tr>
+                        <td>
+                            <!-- use 3Dmol to render the compound -->
+                            <div style='height:300px; width:300px' class='viewer_3Dmoljs container' data-href="{{ target.target_file.url }}"
+                                 data-backgroundcolor='0xffffff' data-style='cartoon:color=spectrum'></div>
+                        </td>
+                        <td>{{ target.pdb }}</td>
+                        <td>{{ target.chain }}</td>
+                        <td>{{ target.num_pockets }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <h5>There are no structural models of this gene in the database</h5>
+        {% endif %}
+    </div>
+
+
+
+
+
+{% endblock %}

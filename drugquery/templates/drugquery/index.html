@@ -1,0 +1,51 @@
+<!-- make sure we include the base template -->
+{% extends 'drugquery/base.html' %}
+
+
+
+{% block body %}
+
+{% load static %}
+
+<!--        BODY            -->
+<div class="container">
+
+    <div class="row">
+        <img class='img-responsive' style="max-width: 30%" src="{% static 'drugquery/images/DRUGQuery.png' %}" alt="DrugQuery"/>
+    </div>
+
+    <!-- whenever you make columns, they have to go inside a row -->
+    <br><br>
+
+    <div class="row" style="margin-bottom: 40px; margin-top: 0px">
+         <!--we have to take up 12 columns total, so each column needs to be width 4 -->
+         <!--we'll make each col medium sized, so use class "col-md-4" -->
+
+        <div class="col-sm-4">
+            <img class="img-responsive" src="{% static 'drugquery/images/3LBK_pic.png' %}" alt="DrugQuery"/>
+        </div>
+        <div class="col-sm-8">
+            <p class="lead">
+                Welcome to DrugQuery, a multi-target docking server built for screening small molecules
+                against the entire human structural proteome.
+                <br><br>The DrugQuery library currently has
+                <strong>{{ num_pockets }}</strong> predicted binding sites on <strong>{{ num_structs }}</strong>
+                protein structures of <strong>{{ num_genes }}</strong> human genes</strong>, all available for
+                docking.
+                <br><br>To date, <strong>{{ num_cpds }}</strong> compounds have been screened DrugQuery. The results
+                are fully searchable and predicted targets and binding models are all available for download.
+            </p>
+            <br><p>
+            This work is funded by U.S. National Science Foundation Graduate Research Fellowship Grant
+            1247842. For user support, contact Nicolas Pabon ( npabon at pitt dot edu ). &copy Nicolas Pabon.
+            </p>
+
+        </div>
+
+     </div>
+</div>
+
+
+
+{% endblock %}
+

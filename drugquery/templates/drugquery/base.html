@@ -1,0 +1,110 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1">-->
+    <meta content="text/html">
+    <title>{% block title %}DrugQuery{% endblock %}</title>
+
+    <!-- Loads the path to your static files -->
+    {% load staticfiles %}
+
+
+    <!--sortable tables-->
+    <script type="text/javascript" src="{% static 'drugquery/tablesorter/jquery-latest.js' %}"></script>
+    <script src="http://3Dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
+    <script type="text/javascript" src="{% static 'drugquery/tablesorter/jquery.tablesorter.js' %}"></script>
+
+    <!-- Google fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Comfortaa" rel="stylesheet" type="text/css"/>
+
+    <!-- Latest compiled and minified CSS from BOOTSRAP -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+
+    <!-- OUR stylesheet, which we want to override bootstrap -->
+    <link rel="stylesheet" type="text/css"  href="{% static 'drugquery/style.css' %}"/>
+
+</head>
+<body>
+
+<!--        NAVBAR          -->
+
+<nav class="navbar navbar-inverse "/> <!-- nav class="navbar navbar-default" -->
+    <!-- make fluid container, which basically means it will take up the whole horizontal space of the page -->
+    <div class="container-fluid">
+        <!-- HEADER -->
+        <div class="navbar-header">
+            <!-- dynamic button that will display the menu if the screen shrinks too small -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#topNavBar">
+                <!-- make the three little lines on the button -->
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'drugquery:index' %}">
+                <span><img src="{% static 'drugquery/images/drugquery_molekule.svg' %}" width="22" height="22"
+                     class="" alt="DrugQuery">  DrugQuery</span>
+            </a>
+        </div>
+
+        <!-- Items -->
+        <div class="collapse navbar-collapse" id="topNavBar"> <!-- the things that will dissapear when the screen shrinks -->
+
+            <ul class="nav navbar-nav">
+                <!-- can make class="active" below if we want -->
+                <li class="">
+                    <a href="{% url 'drugquery:about' %}">
+                        <span class="glyphicon glyphicon-home" aria-hidden="true"></span>&nbsp; About
+                    </a>
+                </li>
+                <li class="">
+                    <a href="{% url 'drugquery:upload' %}">
+                        <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>&nbsp; Dock
+                    </a>
+                </li>
+                <li class="">
+                    <a href="{% url 'drugquery:compounds' %}">
+                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span>&nbsp; Compounds
+                    </a>
+                </li>
+                <li class="">
+                    <a href="{% url 'drugquery:genes' %}">
+                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span>&nbsp; Genes
+                    </a>
+                </li>
+                <li class="">
+                    <a href="{% url 'drugquery:queue' %}">
+                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span>&nbsp; Queue
+                    </a>
+                </li>
+            </ul>
+
+
+            <ul class="nav navbar-nav navbar-right">
+                <!-- the search form -->
+                <form class="navbar-form navbar-left" role="search" method="get"
+                      action="{% url 'drugquery:search_compounds' %}">
+                    <div class="form-group">
+                        <input type="text" size="30" class="form-control" name="smiles_query"
+                               placeholder="Small molecule SMILES search" title="Paste SMILES here">
+                    </div>
+                    <button type="submit" class="btn btn-default">Search</button>
+                </form>
+
+            </ul>
+
+        </div>
+    </div>
+</nav>
+
+<!-- This is where we plop the code for the rest of the page -->
+{% block body %}
+{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+data
+test_targets
+test_upload_files
+logs
+db.sqlite3
+.DS_Store
+static
+manage.py
+.idea

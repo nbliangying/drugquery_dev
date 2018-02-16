@@ -1,0 +1,84 @@
+<!-- let django know we want to use the base navbar template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}Compound Index{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+    <!-- This is the body -->
+    {% if all_compounds %}  <!-- Returns true if we have some albums in the list -->
+        <div class="container">
+          <h2>Compounds submitted to DrugQuery</h2>
+          <br>
+          <div class="table-responsive">
+            <table class="table table-hover table-condensed">
+                <thead class="thead-inverse">
+                  <tr>
+                    <th>ID</th>
+                    <th>Compound</th>
+                    <th>Proteins Docked</th>
+                    <th>PDBs Docked</th>
+                    <th>Binding Sites Docked</th>
+                    <th>Predicted Target</th>
+                    <th>PDB ID</th>
+                    <th>Chain</th>
+                    <th>Binding Site</th>
+                    <th>Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for compound in all_compounds %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'drugquery:compound_detail' compound.pk %}">{{ compound.pk }}</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'drugquery:compound_detail' compound.pk %}">
+                                <img src="{{ compound.compound_img_file.url }}" class="img-responsive" style="width:70%">
+                            </a>
+
+                        </td>
+                        <td>{{ compound.num_docked_genes }}</td>
+                        <td>{{ compound.num_docked_pdbs }}</td>
+                        <td>{{ compound.num_docked_pockets }}</td>
+                        <td>{{ compound.best_gene.name }}</td>
+                        <td>{{ compound.best_pdb.pdb_id }}</td>
+                        <td>{{ compound.best_target.chain }}</td>
+                        <td>{{ compound.best_pocket.pocket_number }}</td>
+                        <td>{{ compound.best_docking.top_score }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+          </div>
+            {% if is_paginated %}
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                      <li><a href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                    {% else %}
+                      <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}
+                      {% if page_obj.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                      {% else %}
+                        <li><a href="?page={{ i }}">{{ i }}</a></li>
+                      {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                      <li><a href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                    {% else %}
+                      <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+        </div>
+
+
+    {% else %}
+        <div class="container">
+            <h3>No compounds have been submitted</h3>
+        </div>
+    {% endif %}
+
+{% endblock %}

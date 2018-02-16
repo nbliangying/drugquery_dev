@@ -1,0 +1,168 @@
+<!-- let django know we want to use the base navbar template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}Test Layout{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+
+<!-- container-fluid takes up the entire width of the screen -->
+<div class="container">
+
+    <h1>3 Column Layout</h1>
+
+    <!-- various cool things you can do with text -->
+    <br>
+    <!-- how to highlight text -->
+    <p>You can highlight words or text using the <mark>mark tags.</mark></p>
+
+    <!-- quotes -->
+    <br>
+    <blockquote>
+        <p>Sometimes I wet the bed, on purpose.</p>
+        <footer>My grandpa</footer>
+    </blockquote>
+
+    <!-- lists -->
+    <br>
+    <h4>Things to do when you're bored:</h4>
+    <dl>
+        <dt>Indoors</dt>
+            <dd>- take a nap</dd>
+            <dd>- watch Netflix</dd>
+        <dt>Outdoors</dt>
+            <dd>- go back inside</dd>
+    </dl>
+
+    <!-- when you want to use code formatting -->
+    <br>
+    <p>To set the user's weight use <code>setUserWeight(374);</code> with an integer</p>
+
+    <!-- or for multiline code -->
+    <br>
+    <p>For multiline code use the pre tags</p>
+    <pre>
+for n in range(101):
+    if (n%4 is 0):
+        print(n)
+    </pre>
+
+    <br>
+    <p>This is supposed to be keyboard input: <kbd>Ctrl+Alt+Del</kbd></p>
+
+    <br>
+    <h4>Built in color classes:</h4>
+        <p>This text is normal</p>
+        <p class="text-danger"><strong>This text is bold danger</strong></p>
+        <p class="text-success">This text is success</p>
+        <p class="text-muted">This text is muted</p>
+
+    <h4>Built in backgrounds:</h4>
+        <p>This background is normal</p>
+        <p class="bg-danger">This background is danger</p>
+        <p class="bg-success">This background is success</p>
+        <p class="bg-muted">This background is muted</p>
+
+    <!-- whenever you make columns, they have to go inside a row -->
+    <div class="row">
+        <br>
+        <!-- we have to take up 12 columns total, so each column needs to be width 4 -->
+        <!-- we'll make each col medium sized, so use class "col-md-4" -->
+        <div class="col-md-4" style="background-color: #FF9999">Left</div>
+        <div class="col-md-4" style="background-color: #99CCFF">Middle</div>
+        <div class="col-md-4" style="background-color: #00CC99">Right</div>
+     </div>
+
+    <br>
+    <h2>Simple table</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Bucky Roberts</td>
+                <td>74</td>
+                <td>8760</td>
+            </tr>
+            <tr>
+                <td>Turd McGurd</td>
+                <td>13</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>Chchchchch Idonno</td>
+                <td>18</td>
+                <td>32</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h2>Condensed table </h2><p class="text-muted">(half the padding)</p>
+    <table class="table table-condensed">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Bucky Roberts</td>
+                <td>74</td>
+                <td>8760</td>
+            </tr>
+            <tr>
+                <td>Turd McGurd</td>
+                <td>13</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>Chchchchch Idonno</td>
+                <td>18</td>
+                <td>32</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h2>Striped table</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Bucky Roberts</td>
+                <td>74</td>
+                <td>8760</td>
+            </tr>
+            <tr>
+                <td>Turd McGurd</td>
+                <td>13</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>Chchchchch Idonno</td>
+                <td>18</td>
+                <td>32</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+</div>
+
+
+{% endblock %}

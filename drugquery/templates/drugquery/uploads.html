@@ -1,0 +1,20 @@
+<!-- let django know we want to use the base navbar template for this page -->
+{% extends 'drugquery/base.html' %}
+{% block title %}Upload Index{% endblock %}
+
+<!-- this tag specifies what to insert into base.html -->
+{% block body %}
+
+    <!-- This is the body -->
+    {% if all_uploads %}  <!-- Returns true if we have some albums in the list -->
+        <h3>DrugQuery uploads:</h3>
+        <ul>
+            {% for upload in all_uploads %}
+            <li> <a href="#">{{ upload.get_name }}</a> </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h3>Nothing has been uploaded</h3>
+    {% endif %}
+
+{% endblock %}
