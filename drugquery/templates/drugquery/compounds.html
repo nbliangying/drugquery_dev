@@ -41,11 +41,11 @@
                         <td>{{ compound.num_docked_genes }}</td>
                         <td>{{ compound.num_docked_pdbs }}</td>
                         <td>{{ compound.num_docked_pockets }}</td>
-                        <td>{{ compound.get_best_gene.name }}</td>
-                        <td>{{ compound.get_best_pdb.pdb_id }}</td>
-                        <td>{{ compound.get_best_target.chain }}</td>
-                        <td>{{ compound.get_best_pocket.pocket_number }}</td>
-                        <td>{{ compound.get_best_docking.top_score }}</td>
+                        <td>{{ compound.best_gene.name }}</td>
+                        <td>{{ compound.best_pdb.pdb_id }}</td>
+                        <td>{{ compound.best_target.chain }}</td>
+                        <td>{{ compound.best_pocket.pocket_number }}</td>
+                        <td>{{ compound.best_docking.top_score }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>

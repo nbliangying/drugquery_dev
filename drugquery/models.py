@@ -294,82 +294,26 @@ class Compound(models.Model):
         self.save()
 
 
-
-    # functions to tell you which / how many targets this cpd has been docked to
+    # functions to tell you which / how many pockets/ targets this cpd has been docked to
     def get_docked_pockets(self):
         cpd_dockings = self.docking_set.all()
-        return [docking.pocket for docking in cpd_dockings]
+        return set([docking.pocket for docking in cpd_dockings])
 
-    # returns a list of Pockets that have NOT been docked against
+    def get_docked_targets(self):
+        docked_targets = set([ pocket.target for pocket in self.get_docked_pockets() ])
+        return docked_targets
+
+    # functions to tell you which dockings are currently missing
     def get_undocked_pockets(self):
         docked_pockets = self.get_docked_pockets()
-        undocked_pockets = [ pocket for pocket in Pocket.objects.all() if pocket not in docked_pockets ]
+        undocked_pockets = set([ pocket for pocket in Pocket.objects.all() if pocket not in docked_pockets ])
         return undocked_pockets
 
     def get_num_undocked_pockets(self):
-        return len(self.get_undocked_pockets())
-
-    def get_docked_targets(self):
-        docked_targets = [ pocket.target for pocket in self.get_docked_pockets() ]
-        return list(set(docked_targets))
-
-    def get_docked_pdbs(self):
-        docked_pdbs = [ target.pdb for target in self.get_docked_targets() ]
-        return list(set(docked_pdbs))
-
-    def get_docked_genes(self):
-        docked_genes = [ pdb.gene for pdb in self.get_docked_pdbs() ]
-        return list(set(docked_genes))
-
-    def get_num_docked_pockets(self):
-        return len(self.get_docked_pockets())
-
-    def get_num_docked_targets(self):
-        return len(self.get_docked_targets())
-
-    def get_num_docked_pdbs(self):
-        return len(self.get_docked_pdbs())
-
-    def get_num_docked_genes(self):
-        return len(self.get_docked_genes())
+        num_undocked_pockets = len(Pocket.objects.all()) - self.num_docked_pockets
+        return num_undocked_pockets
 
 
-    # functions return the docking/pocket/target/pdb/gene that produced the best docking score
-    def get_best_docking(self):
-        all_dockings = self.docking_set.all()
-        try:
-            best_docking = min(all_dockings, key=attrgetter('top_score'))
-        except ValueError:
-            best_docking = None
-        return best_docking
-
-    def get_best_pocket(self):
-        try:
-            best_pocket = self.get_best_docking().pocket
-        except AttributeError:
-            best_pocket = None
-        return best_pocket
-
-    def get_best_target(self):
-        try:
-            best_target  = self.get_best_pocket().target
-        except AttributeError:
-            best_target = None
-        return best_target
-
-    def get_best_pdb(self):
-        try:
-            best_pdb = self.get_best_target().pdb
-        except AttributeError:
-            best_pdb = None
-        return best_pdb
-
-    def get_best_gene(self):
-        try:
-            best_gene = self.get_best_pdb().gene
-        except AttributeError:
-            best_gene = None
-        return best_gene
 
     # return the pybel molecule for a compound
     def get_pybel_mol(self):
@@ -428,7 +372,9 @@ class Docking(models.Model):
     def __str__(self):
         return self.get_name() + ' : ' + str(self.top_score)
 
-# Receive the pre_delete signal and delete the files associated with the model instance
+
+
+## Functions below describe how to update the
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 
@@ -437,11 +383,44 @@ def upload_delete(sender, instance, **kwargs):
     # Pass false so FileField doesn't save the model.
     instance.upload_file.delete(False)
 
+# reduce the model attribute num_compounds by 1 and save the model
+def reduce_num_cpds(model):
+    model.num_compounds -= 1
+    model.save()
+
+# reduce the model attribute num_dockings by 1 and save the model
+def reduce_num_dockings(model):
+    model.num_dockings -= 1
+    model.save()
+
 @receiver(pre_delete, sender=Compound)
 def compound_delete(sender, instance, **kwargs):
     # Pass false so FileField doesn't save the model.
     instance.compound_sdf_file.delete(False)
     instance.compound_img_file.delete(False)
+
+    # Reduce the num_compounds counter on all genes/pdbs/targets/pockets
+    cpd_pockets = instance.get_docked_pockets()
+    cpd_targets = { pocket.target for pocket in cpd_pockets }
+    cpd_pdbs = { target.pdb for target in cpd_targets }
+    cpd_genes = { pdb.gene for pdb in cpd_pdbs }
+
+    for pocket in cpd_pockets: reduce_num_cpds(pocket)
+    for target in cpd_targets: reduce_num_cpds(target)
+    for pdb in cpd_pdbs: reduce_num_cpds(pdb)
+    for gene in cpd_genes: reduce_num_cpds(gene)
+
+@receiver(pre_delete, sender=Docking)
+def docking_delete(sender, instance, **kwargs):
+    # Pass false so FileField doesn't save the model.
+    instance.docking_file.delete(False)
+
+    # Reduce the num_dockings counter on all genes/pdbs/targets/pockets
+    reduce_num_dockings(instance.pocket)
+    reduce_num_dockings(instance.pocket.target)
+    reduce_num_dockings(instance.pocket.target.pdb)
+    reduce_num_dockings(instance.pocket.target.pdb.gene)
+
 
 @receiver(pre_delete, sender=Target)
 def target_delete(sender, instance, **kwargs):
@@ -453,10 +432,7 @@ def pocket_delete(sender, instance, **kwargs):
     # Pass false so FileField doesn't save the model.
     instance.pocket_file.delete(False)
 
-@receiver(pre_delete, sender=Docking)
-def docking_delete(sender, instance, **kwargs):
-    # Pass false so FileField doesn't save the model.
-    instance.docking_file.delete(False)
+
 
 
 

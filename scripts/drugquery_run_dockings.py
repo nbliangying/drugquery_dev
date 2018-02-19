@@ -61,7 +61,7 @@ def submit_docking(compound, pocket):
 
 # runs a DrugQuery multi-target docking job
 def run_job(job):
-    for pocket in job.compound.undocked_pockets(): #for pocket in Pocket.objects.all():
+    for pocket in job.compound.get_undocked_pockets(): #for pocket in Pocket.objects.all():
         submit_docking(job.compound, pocket)
     job.status='R'
     job.save()
@@ -85,6 +85,77 @@ def get_top_docking_score(docking_file):
     return top_score
 
 
+# function to update database models' docking records when a new docking is created
+def update_targets(pocket):
+    target = pocket.target
+    pdb = target.pdb
+    gene = pdb.gene
+
+    pocket.num_dockings += 1
+    target.num_dockings += 1
+    pdb.num_dockings += 1
+    gene.num_dockings += 1
+
+    pocket.save()
+    target.save()
+    pdb.save()
+    gene.save()
+
+# check if newly created docking object set a new top score
+# for the compound
+def check_new_top_score(docking):
+    compound = docking.compound
+    top_score = docking.top_score
+    new_top_score = False
+
+    if not compound.best_docking:
+        new_top_score = True
+    else:
+        if top_score < compound.best_docking.top_score: # more negative is better
+            new_top_score = True
+
+    # if we set a new record, save it
+    if new_top_score:
+        compound.best_docking = docking
+        compound.best_pocket = docking.pocket
+        compound.best_target = docking.pocket.target
+        compound.best_pdb = docking.pocket.target.pdb
+        compound.best_gene = docking.pocket.target.pdb.gene
+        compound.save()
+
+
+# function to update parent compound's docking records when a new docking is created
+# also updates the unique compound records of the database models
+def update_compound(compound, pocket):
+    target = pocket.target
+    pdb = target.pdb
+    gene = pdb.gene
+
+    compound.num_docked_pockets += 1
+    pocket.num_compounds += 1
+    pocket.save()
+
+    cpd_targets = set(compound.get_docked_targets())
+    if target not in cpd_targets:
+        compound.num_docked_targets += 1
+        target.num_compounds += 1
+        target.save()
+
+        cpd_pdbs = set([t.pdb for t in cpd_targets])
+        if pdb not in cpd_pdbs:
+            compound.num_docked_pdbs += 1
+            pdb.num_compounds += 1
+            pdb.save()
+
+            cpd_genes = set([p.gene for p in cpd_pdbs])
+            if gene not in cpd_genes:
+                compound.num_docked_genes += 1
+                gene.num_compounds += 1
+                gene.save()
+
+    compound.save()
+
+
 # create a Docking object from smina output file and save it to the database,
 # then delete the smina output file
 def create_docking_object(outfile):
@@ -100,6 +171,12 @@ def create_docking_object(outfile):
     pocket = Pocket.objects.get(name=pocket_name)
     top_score = get_top_docking_score(outfile)
 
+    # update genes / pdbs / targets / pockets docking records
+    update_targets(pocket)
+
+    # update the parent compound's docking records
+    update_compound(compound, pocket)
+
     # create the new Docking object
     docking = Docking()
     docking.compound = compound
@@ -110,27 +187,8 @@ def create_docking_object(outfile):
     docking.docking_file.save(new_docking_file_path, new_docking_file, save=True)
     docking.save()
 
-    # update the parent compound's docking records
-    compound.num_docked_pockets += 1
-
-    cpd_targets = set(compound.get_docked_targets())
-    if pocket.target not in cpd_targets:
-        compound.num_docked_targets += 1
-
-        cpd_pdbs = set([ t.pdb for t in cpd_targets ])
-        if pocket.target.pdb not in cpd_pdbs:
-            compound.num_docked_pdbs += 1
-
-            cpd_genes = set([ p.gene for p in cpd_pdbs ])
-            if pocket.target.pdb.gene not in cpd_genes:
-                compound.num_docked_genes += 1
-
-    compound.save()
-
-    # see if we set a new top docking score
-
-
-    compound.save()
+    # check to see if we set a new top docking score for this cpd
+    check_new_top_score(docking)
 
     # remove the file from TMP_ROOT so we do not double count it
     os.remove(outfile)
@@ -169,7 +227,7 @@ while True:
         # if the job is not finished (i.e. if there are more targets for
         # this Job's Compound to dock against), then see if there are new
         # smina output files to process
-        docked_pockets = current_job.compound.docked_pockets()
+        docked_pockets = current_job.compound.get_docked_pockets()
         if not len(docked_pockets) == len(Pocket.objects.all()):
             if DEBUG:
                 print('Job is still running... creating docking Objects from smina output files\n')

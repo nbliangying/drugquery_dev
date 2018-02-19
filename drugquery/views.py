@@ -99,7 +99,7 @@ class CompoundDetailView(generic.DetailView):
     # a generic.DetailView expects a primary key, in this case the pk of an compound
     model = Compound
     context_object_name = "compound" # the default is the lowercase model name
-    template_name = 'drugquery/compound_detail.html'
+    template_name = 'drugquery/compound_detail_all_dockings.html'
 
 
 class GeneIndexView(generic.ListView):

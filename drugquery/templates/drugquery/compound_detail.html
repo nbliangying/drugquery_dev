@@ -45,11 +45,11 @@
                     {{ compound.get_docking_status }}
                 </span><br>
             </h4>
-            <h4>No. missing dockings:
-                <span class="text-muted", style="padding-left:2.6em">
-                    {{ compound.num_undocked_pockets }}
-                </span><br>
-            </h4>
+            <!--<h4>No. missing dockings:-->
+                <!--<span class="text-muted", style="padding-left:2.6em">-->
+                    <!--{{ compound.get_num_undocked_pockets }}-->
+                <!--</span><br>-->
+            <!--</h4>-->
 
             {% if compound.score_file %}
                 <h5><form action="{% url 'drugquery:download_scores' compound.pk %}" method="post" enctype="multipart/form-data">
@@ -100,92 +100,9 @@
             </table>
         </div>
 
-        <div class="row">
-
-            <!-- a form to collect which files to download -->
-            <form action="{% url 'drugquery:download_dockings' compound.pk %}" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <br>
-                <h2>Dockings Performed</h2>
-                <button class="btn btn-default" type="submit" class="btn">
-                    <span class="glyphicon glyphicon-download"></span>&nbsp; Download selected dockings
-                </button>
-                <br><br>
-
-                <!-- input field to filter results by gene name -->
-                <input type="text" id="geneName" class="form-control" onkeyup="filterDockings()"
-                       placeholder="Filter dockings by target gene" title="Type in a gene name"
-                       style="margin-bottom: 1em">
-
-                <div style='height:550px; overflow:auto'>
-                    <table id="dockingTable" class="tablesorter table table-hover">
-                        <thead class="thead-inverse">
-                            <tr>
-                                <th><a href="">Gene</a></th>
-                                <th><a href="">Pdb</a></th>
-                                <th><a href="">Chain</a></th>
-                                <th><a href="">Pocket</a></th>
-                                <th><a href="">Score</a></th>
-                                <th>Download</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                        {% for docking in compound.docking_set.all %}
-                            <tr>
-                                <td>{{ docking.pocket.target.pdb.gene.name }}</td>
-                                <td>{{ docking.pocket.target.pdb.pdb_id }}</td>
-                                <td>{{ docking.pocket.target.chain }}</td>
-                                <td>{{ docking.pocket.pocket_number }}</td>
-                                <td>{{ docking.top_score }}</td>
-                                <td>
-                                    <div class="checkbox">
-                                        <input type="checkbox" name="checks[]" value="{{ docking.pk }}" />
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-
-
-                        </tbody>
-                    </table>
-                </div>
-
-            </form>
-            <br><br>
-        </div>
 
     </div>
 
-    <!-- make the table sortable by column headers -->
-    <script language="javascript">
-        $(document).ready(function()
-            {
-                $("#dockingTable").tablesorter();
-            }
-        );
-    </script>
-
-    <!-- make the table filterable using search -->
-    <script>
-    function filterDockings() {
-      var input, filter, table, tr, td, i;
-      input = document.getElementById("geneName");
-      filter = input.value.toUpperCase();
-      table = document.getElementById("dockingTable");
-      tr = table.getElementsByTagName("tr");
-      for (i = 0; i < tr.length; i++) {
-        td = tr[i].getElementsByTagName("td")[0];
-        if (td) {
-          if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
-            tr[i].style.display = "";
-          } else {
-            tr[i].style.display = "none";
-          }
-        }
-      }
-    }
-    </script>
 
 
 
