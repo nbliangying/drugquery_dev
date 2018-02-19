@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # comment out the next line to access the admin page
-    'django.contrib.sites',
+    #'django.contrib.sites',
     'drugquery.apps.DrugqueryConfig',
     'silk',
 ]

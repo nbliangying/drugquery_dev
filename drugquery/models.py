@@ -374,14 +374,16 @@ class Docking(models.Model):
 
 
 
-## Functions below describe how to update the
+
+##
+## Functions below describe how to update the database when
+## we delete a row from a table
+##
+
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 
-@receiver(pre_delete, sender=Upload)
-def upload_delete(sender, instance, **kwargs):
-    # Pass false so FileField doesn't save the model.
-    instance.upload_file.delete(False)
+
 
 # reduce the model attribute num_compounds by 1 and save the model
 def reduce_num_cpds(model):
@@ -393,9 +395,31 @@ def reduce_num_dockings(model):
     model.num_dockings -= 1
     model.save()
 
+# reduce the model attribute num_pdbs by 1 and save the model
+def reduce_num_pdbs(model):
+    model.num_pdbs -= 1
+    model.save()
+
+# reduce the model attribute num_pdbs by 1 and save the model
+def reduce_num_targets(model):
+    model.num_targets -= 1
+    model.save()
+
+# reduce the model attribute num_pdbs by 1 and save the model
+def reduce_num_pockets(model):
+    model.num_pockets -= 1
+    model.save()
+
+
+
+@receiver(pre_delete, sender=Upload)
+def upload_delete(sender, instance, **kwargs):
+    # Delete the file - Pass false so FileField doesn't save the model.
+    instance.upload_file.delete(False)
+
 @receiver(pre_delete, sender=Compound)
 def compound_delete(sender, instance, **kwargs):
-    # Pass false so FileField doesn't save the model.
+    # Delete the file - Pass false so FileField doesn't save the model.
     instance.compound_sdf_file.delete(False)
     instance.compound_img_file.delete(False)
 
@@ -412,25 +436,63 @@ def compound_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=Docking)
 def docking_delete(sender, instance, **kwargs):
-    # Pass false so FileField doesn't save the model.
+    # Delete the file - Pass false so FileField doesn't save the model.
     instance.docking_file.delete(False)
 
     # Reduce the num_dockings counter on all genes/pdbs/targets/pockets
-    reduce_num_dockings(instance.pocket)
-    reduce_num_dockings(instance.pocket.target)
-    reduce_num_dockings(instance.pocket.target.pdb)
-    reduce_num_dockings(instance.pocket.target.pdb.gene)
+    pocket = instance.pocket
+    target = pocket.target
+    pdb = target.pdb
+    gene = pdb.gene
+    reduce_num_dockings(pocket)
+    reduce_num_dockings(target)
+    reduce_num_dockings(pdb)
+    reduce_num_dockings(gene)
 
+
+@receiver(pre_delete, sender=Pdb)
+def pdb_delete(sender, instance, **kwargs):
+    # Reduce the num_pdbs counter on the parent models
+    gene = instance.gene
+    reduce_num_pdbs(gene)
+
+    # Delete parent Gene if it has no PDBs left
+    if gene.num_pdbs == 0:
+        gene.delete()
 
 @receiver(pre_delete, sender=Target)
 def target_delete(sender, instance, **kwargs):
-    # Pass false so FileField doesn't save the model.
+    # Delete the file - Pass false so FileField doesn't save the model.
     instance.target_file.delete(False)
+
+    # Reduce the num_targets counter on the parent models
+    pdb = instance.pdb
+    gene = pdb.gene
+    reduce_num_targets(pdb)
+    reduce_num_targets(gene)
+
+    # Delete parent PDB if it has no targets left
+    if pdb.num_targets == 0:
+        pdb.delete()
 
 @receiver(pre_delete, sender=Pocket)
 def pocket_delete(sender, instance, **kwargs):
-    # Pass false so FileField doesn't save the model.
+    # Delete the file - Pass false so FileField doesn't save the model.
     instance.pocket_file.delete(False)
+
+    # Reduce the num_pockets counter on the parent models
+    target = instance.target
+    pdb = target.pdb
+    gene = pdb.gene
+    reduce_num_pockets(target)
+    reduce_num_pockets(pdb)
+    reduce_num_pockets(gene)
+
+    # Delete parent target if it has no pockets left
+    if target.num_pockets == 0:
+        target.delete()
+
+
 
 
 

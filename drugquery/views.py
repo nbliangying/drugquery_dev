@@ -99,13 +99,13 @@ class CompoundDetailView(generic.DetailView):
     # a generic.DetailView expects a primary key, in this case the pk of an compound
     model = Compound
     context_object_name = "compound" # the default is the lowercase model name
-    template_name = 'drugquery/compound_detail_all_dockings.html'
+    template_name = 'drugquery/compound_detail.html'
 
 
 class GeneIndexView(generic.ListView):
     template_name = 'drugquery/genes.html'
     context_object_name = 'all_genes'
-    paginate_by = 40
+    paginate_by = 100
 
     def get_queryset(self):
         sorted_genes = sorted(Gene.objects.all(), key = lambda g: g.name)
@@ -175,6 +175,7 @@ def downloadDockings(request, pk):
 
 
     #return redirect(reverse('drugquery:compound_detail', kwargs={'pk': pk}))
+
 
 def redockCompound(request, pk):
     compound = Compound.objects.get(pk=pk)
