@@ -7,3 +7,5 @@ db.sqlite3
 static
 manage.py
 .idea
+drugquery/__pycache__/
+drugquery_dev/__pycache__/

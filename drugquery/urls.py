@@ -27,7 +27,8 @@ urlpatterns = [
     url(r'^compounds/$', views.CompoundIndexView.as_view(), name='compounds'),
 
     # drugquery/compounds/<pk>/
-    url(r'^compounds/(?P<pk>[0-9]+)/$', views.CompoundDetailView.as_view(), name="compound_detail"),
+    # url(r'^compounds/(?P<pk>[0-9]+)/$', views.CompoundDetailView.as_view(), name="compound_detail"),
+    url(r'^compounds/(?P<pk>[0-9]+)/$', views.compoundDetailView, name="compound_detail"),
 
     # drugquery/genes/<gene_name>
     url(r'^genes/(?P<gene_name>[A-Z0-9]+)/$', views.geneDetailView, name="gene_detail"),

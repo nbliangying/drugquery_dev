@@ -337,6 +337,22 @@ class Compound(models.Model):
             current_status = 'Idle'
         return current_status
 
+    # define the name upon save
+    def save(self, *args, **kwargs):
+        # verify all model counters
+        compound_dockings = set(self.docking_set.all())
+        compound_pockets = { docking.pocket for docking in  compound_dockings }
+        compound_targets = { pocket.target for pocket in compound_pockets }
+        compound_pdbs = { target.pdb for target in compound_targets }
+        compound_genes = { pdb.gene for pdb in compound_pdbs }
+
+        self.num_docked_pockets = len(compound_pockets)
+        self.num_docked_targets = len(compound_targets)
+        self.num_docked_pdbs = len(compound_pdbs)
+        self.num_docked_genes = len(compound_genes)
+
+        super(Compound, self).save(*args, **kwargs)
+
 
 class Job(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
@@ -367,7 +383,7 @@ class Docking(models.Model):
     docking_file = models.FileField(upload_to='dockings')
 
     def get_name(self):
-        return self.compound.get_name() + self.pocket.name
+        return self.compound.get_name() + '_' + self.pocket.name
 
     def __str__(self):
         return self.get_name() + ' : ' + str(self.top_score)
@@ -380,7 +396,7 @@ class Docking(models.Model):
 ## we delete a row from a table
 ##
 
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, post_delete
 from django.dispatch.dispatcher import receiver
 
 
@@ -449,6 +465,15 @@ def docking_delete(sender, instance, **kwargs):
     reduce_num_dockings(pdb)
     reduce_num_dockings(gene)
 
+    # we don't need to check for the compounds top score. this occurs
+    # the first time the compound page is visited
+
+@receiver(post_delete, sender=Docking)
+def docking_post_delete(sender, instance, **kwargs):
+    # Update the parent compound's num_docked_genes/pdbs/targets/pockets
+    compound = instance.compound
+    compound.save()
+
 
 @receiver(pre_delete, sender=Pdb)
 def pdb_delete(sender, instance, **kwargs):
@@ -456,9 +481,6 @@ def pdb_delete(sender, instance, **kwargs):
     gene = instance.gene
     reduce_num_pdbs(gene)
 
-    # Delete parent Gene if it has no PDBs left
-    if gene.num_pdbs == 0:
-        gene.delete()
 
 @receiver(pre_delete, sender=Target)
 def target_delete(sender, instance, **kwargs):
@@ -471,9 +493,6 @@ def target_delete(sender, instance, **kwargs):
     reduce_num_targets(pdb)
     reduce_num_targets(gene)
 
-    # Delete parent PDB if it has no targets left
-    if pdb.num_targets == 0:
-        pdb.delete()
 
 @receiver(pre_delete, sender=Pocket)
 def pocket_delete(sender, instance, **kwargs):
@@ -487,21 +506,6 @@ def pocket_delete(sender, instance, **kwargs):
     reduce_num_pockets(target)
     reduce_num_pockets(pdb)
     reduce_num_pockets(gene)
-
-    # Delete parent target if it has no pockets left
-    if target.num_pockets == 0:
-        target.delete()
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -45,11 +45,11 @@
                     {{ compound.get_docking_status }}
                 </span><br>
             </h4>
-            <!--<h4>No. missing dockings:-->
-                <!--<span class="text-muted", style="padding-left:2.6em">-->
-                    <!--{{ compound.get_num_undocked_pockets }}-->
-                <!--</span><br>-->
-            <!--</h4>-->
+            <h4>No. missing dockings:
+                <span class="text-muted", style="padding-left:2.6em">
+                    {{ compound.get_num_undocked_pockets }}
+                </span><br>
+            </h4>
 
             {% if compound.score_file %}
                 <h5><form action="{% url 'drugquery:download_scores' compound.pk %}" method="post" enctype="multipart/form-data">
@@ -61,12 +61,14 @@
             {% endif %}
 
             {% if compound.get_docking_status == 'Idle' %}
-                <h5><form action="{% url 'drugquery:redock_cpd' compound.pk %}" method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <button class="btn btn-default btn-xs" type="submit" class="btn">
-                        <span class="glyphicon glyphicon-upload"></span>  Dock to missing targets
-                    </button>
-                </form></h5>
+                {% if compound.get_num_undocked_pockets > 0 %}
+                    <h5><form action="{% url 'drugquery:redock_cpd' compound.pk %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <button class="btn btn-default btn-xs" type="submit" class="btn">
+                            <span class="glyphicon glyphicon-upload"></span>  Dock to missing targets
+                        </button>
+                    </form></h5>
+                {% endif %}
             {% endif %}
 
 

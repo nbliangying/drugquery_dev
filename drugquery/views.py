@@ -71,7 +71,7 @@ class UploadIndexView(generic.ListView):
 class CompoundIndexView(generic.ListView):
     template_name = 'drugquery/compounds.html'
     context_object_name = "all_compounds"
-    paginate_by = 5
+    paginate_by = 20
 
     def get_queryset(self):
         return Compound.objects.all()
@@ -100,6 +100,37 @@ class CompoundDetailView(generic.DetailView):
     model = Compound
     context_object_name = "compound" # the default is the lowercase model name
     template_name = 'drugquery/compound_detail.html'
+
+
+def compoundDetailView(request, pk):
+    compound = get_object_or_404(Compound, pk=pk)
+
+    # if needed, update the top docking/pocket/target/gene for this compound
+    # it's kind of awkward to do it here in this view but it's problematic to try
+    # to update the top score when a docking is deleted because of the
+    # on_delete behavior of the Compound's best_docking field
+    if compound.best_docking == None:
+        compound_dockings = compound.docking_set.all()
+
+        if len(compound_dockings) > 0:
+            sorted_compound_dockings = sorted(compound_dockings, key = lambda d: d.top_score)
+            best_docking = sorted_compound_dockings[0]
+            compound.best_docking = best_docking
+            compound.best_pocket = best_docking.pocket
+            compound.best_target = best_docking.pocket.target
+            compound.best_pdb = best_docking.pocket.target.pdb
+            compound.best_gene = best_docking.pocket.target.pdb.gene
+
+        else:
+            compound.best_docking = None
+            compound.best_pocket = None
+            compound.best_target = None
+            compound.best_pdb = None
+            compound.best_gene = None
+
+        compound.save()
+
+    return render(request, 'drugquery/compound_detail.html', {'compound': compound})
 
 
 class GeneIndexView(generic.ListView):
