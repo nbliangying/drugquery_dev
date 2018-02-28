@@ -126,6 +126,7 @@ class Upload(models.Model):
     upload_file = models.FileField(validators=[validate_upload_size, validate_upload_format], upload_to='uploads')
     email = models.EmailField()
     smiles = models.CharField(max_length=500)
+    #datetime = models.DateTimeField(auto_now_add=True)
 
     # where to go when we create the model
     def get_absolute_url(self):
