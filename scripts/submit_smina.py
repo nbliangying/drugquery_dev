@@ -47,7 +47,6 @@ echo \" \"
            ]
 
     job_script = template.format(*args)
-    print(job_script)
     job_file = job_name + '.pbs'
     open(job_file, 'w').write(job_script)
     cmd = 'qsub ' + job_file

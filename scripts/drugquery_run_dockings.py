@@ -280,7 +280,6 @@ while True:
             current_job.status = 'C'
             current_job.save()
 
-
     time.sleep(3)
 
 
