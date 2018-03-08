@@ -298,16 +298,16 @@ class Compound(models.Model):
     # functions to tell you which / how many pockets/ targets this cpd has been docked to
     def get_docked_pockets(self):
         cpd_dockings = self.docking_set.all()
-        return set([docking.pocket for docking in cpd_dockings])
+        return { docking.pocket for docking in cpd_dockings }
 
     def get_docked_targets(self):
-        docked_targets = set([ pocket.target for pocket in self.get_docked_pockets() ])
+        docked_targets = { pocket.target for pocket in self.get_docked_pockets() }
         return docked_targets
 
     # functions to tell you which dockings are currently missing
     def get_undocked_pockets(self):
         docked_pockets = self.get_docked_pockets()
-        undocked_pockets = set([ pocket for pocket in Pocket.objects.all() if pocket not in docked_pockets ])
+        undocked_pockets = { pocket for pocket in Pocket.objects.all() if pocket not in docked_pockets }
         return undocked_pockets
 
     def get_num_undocked_pockets(self):
@@ -338,19 +338,21 @@ class Compound(models.Model):
             current_status = 'Idle'
         return current_status
 
-    # define the name upon save
-    def save(self, *args, **kwargs):
-        # verify all model counters
-        compound_dockings = set(self.docking_set.all())
-        compound_pockets = { docking.pocket for docking in  compound_dockings }
-        compound_targets = { pocket.target for pocket in compound_pockets }
-        compound_pdbs = { target.pdb for target in compound_targets }
-        compound_genes = { pdb.gene for pdb in compound_pdbs }
+    # save, with option to recount all dockings/targets/etc...
+    def save(self, recount=False, *args, **kwargs):
 
-        self.num_docked_pockets = len(compound_pockets)
-        self.num_docked_targets = len(compound_targets)
-        self.num_docked_pdbs = len(compound_pdbs)
-        self.num_docked_genes = len(compound_genes)
+        # verify all model counters
+        if recount:
+            compound_dockings = set(self.docking_set.all())
+            compound_pockets = { docking.pocket for docking in  compound_dockings }
+            compound_targets = { pocket.target for pocket in compound_pockets }
+            compound_pdbs = { target.pdb for target in compound_targets }
+            compound_genes = { pdb.gene for pdb in compound_pdbs }
+
+            self.num_docked_pockets = len(compound_pockets)
+            self.num_docked_targets = len(compound_targets)
+            self.num_docked_pdbs = len(compound_pdbs)
+            self.num_docked_genes = len(compound_genes)
 
         super(Compound, self).save(*args, **kwargs)
 
@@ -440,16 +442,26 @@ def compound_delete(sender, instance, **kwargs):
     instance.compound_sdf_file.delete(False)
     instance.compound_img_file.delete(False)
 
-    # Reduce the num_compounds counter on all genes/pdbs/targets/pockets
-    cpd_pockets = instance.get_docked_pockets()
-    cpd_targets = { pocket.target for pocket in cpd_pockets }
-    cpd_pdbs = { target.pdb for target in cpd_targets }
-    cpd_genes = { pdb.gene for pdb in cpd_pdbs }
+    # if there isn't a current job running for this compound,
+    # when we delete it we need to reduce the num_compounds
+    # counter on all genes/pdbs/targets/pockets
 
-    for pocket in cpd_pockets: reduce_num_cpds(pocket)
-    for target in cpd_targets: reduce_num_cpds(target)
-    for pdb in cpd_pdbs: reduce_num_cpds(pdb)
-    for gene in cpd_genes: reduce_num_cpds(gene)
+    # if there is a job running, then the genes/pdbs/etc..
+    # haven't been incremented yet, so no need to decrement them
+
+    cpd_jobs = instance.job_set.all()
+    cpd_job_statuses = { j.status for j in cpd_jobs }
+    if not 'R' in cpd_job_statuses:
+
+        cpd_pockets = instance.get_docked_pockets()
+        cpd_targets = { pocket.target for pocket in cpd_pockets }
+        cpd_pdbs = { target.pdb for target in cpd_targets }
+        cpd_genes = { pdb.gene for pdb in cpd_pdbs }
+
+        for pocket in cpd_pockets: reduce_num_cpds(pocket)
+        for target in cpd_targets: reduce_num_cpds(target)
+        for pdb in cpd_pdbs: reduce_num_cpds(pdb)
+        for gene in cpd_genes: reduce_num_cpds(gene)
 
 @receiver(pre_delete, sender=Docking)
 def docking_delete(sender, instance, **kwargs):
@@ -473,7 +485,7 @@ def docking_delete(sender, instance, **kwargs):
 def docking_post_delete(sender, instance, **kwargs):
     # Update the parent compound's num_docked_genes/pdbs/targets/pockets
     compound = instance.compound
-    compound.save()
+    compound.save(recount=True)
 
 
 @receiver(pre_delete, sender=Pdb)
