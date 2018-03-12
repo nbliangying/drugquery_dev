@@ -128,9 +128,19 @@ def compoundDetailView(request, pk):
             compound.best_pdb = None
             compound.best_gene = None
 
-        compound.save()
+        compound.save(recount=False)
 
-    return render(request, 'drugquery/compound_detail.html', {'compound': compound})
+    if not compound.score_file:
+
+        tmp_score_file = os.path.join(settings.MEDIA_ROOT, 'scores/compound_18_scores.txt')
+        with open(tmp_score_file) as f:
+            predicted_targets = f.read()
+
+    else:
+        predicted_targets = 'placeholder 2'
+
+    return render(request, 'drugquery/compound_detail.html', {'compound': compound,
+                                                              'predicted_targets': predicted_targets})
 
 
 class GeneIndexView(generic.ListView):
