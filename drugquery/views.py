@@ -12,6 +12,7 @@ import shutil
 from django.core.files import File
 import pybel
 from .extra import get_similar_cpds
+import pandas as pd
 
 
 # the main landing page
@@ -132,12 +133,15 @@ def compoundDetailView(request, pk):
 
     if not compound.score_file:
 
-        tmp_score_file = os.path.join(settings.MEDIA_ROOT, 'scores/compound_18_scores.txt')
-        with open(tmp_score_file) as f:
-            predicted_targets = f.read()
+        predicted_targets = None
 
     else:
-        predicted_targets = 'placeholder 2'
+
+        scorefile_path = os.path.join(settings.MEDIA_ROOT, compound.score_file.path)
+        predicted_targets = pd.read_csv(scorefile_path, delim_whitespace=True).iloc[:100].values
+
+        # with open(os.path.join(settings.MEDIA_ROOT, compound.score_file.path)) as f:
+        #     predicted_targets = f.readlines()
 
     return render(request, 'drugquery/compound_detail.html', {'compound': compound,
                                                               'predicted_targets': predicted_targets})
@@ -178,13 +182,52 @@ def downloadStructure(request, pk):
     return response
 
 
-def downloadDockings(request, pk):
+def downloadTopDockings(request, pk):
+
+    compound = Compound.objects.get(pk=pk)
+    sorted_dockings = sorted(compound.docking_set.all(), key=lambda x: x.top_score)
+    top_dockings = sorted_dockings[:100]
+
+
+    target_labelled_dockings = [ (docking.pocket.target, docking) for docking in top_dockings]
+    target_labelled_dockings.sort(key=lambda d: d[0].name)
+
+    # create a directory to store the user-selected results
+    if not os.path.exists(settings.TMP_ROOT): os.makedirs(settings.TMP_ROOT)
+    timestamp = '{:%Y-%m-%d__%H.%M.%S}'.format(datetime.datetime.now())
+    result_dir_name = compound.get_name() + '__' + timestamp
+    result_dir = os.path.join(settings.TMP_ROOT, result_dir_name)
+    strdir = str(result_dir)
+    os.mkdir(strdir)
+
+    # organize results by target subdir
+    for target, dockings in groupby(target_labelled_dockings, lambda x: x[0]):
+        target_result_dir = os.path.join(result_dir, target.name)
+        os.mkdir(target_result_dir)
+        shutil.copy2(target.target_file.path, target_result_dir)
+        for target, docking in dockings:
+            shutil.copy2(docking.docking_file.path, target_result_dir)
+
+    # zip results and
+    shutil.make_archive(result_dir, 'zip', result_dir)
+    shutil.rmtree(result_dir)
+
+    zipFile_name = result_dir + '.zip'
+    resultFile = open(zipFile_name, 'rb')
+    response = HttpResponse(resultFile, content_type='application/force-download')
+    response['Content-Disposition'] = 'attachment; filename="%s"' % os.path.basename(zipFile_name)
+    return response
+
+
+def downloadAllDockings(request, pk):
 
     compound = Compound.objects.get(pk=pk)
 
     # retrieve docking objects and groupby target object
-    docking_ids = request.POST.getlist('checks[]')
-    dockings = [ Docking.objects.get(pk=docking_id) for docking_id in docking_ids ]
+    # docking_ids = request.POST.getlist('checks[]')
+    # dockings = [ Docking.objects.get(pk=docking_id) for docking_id in docking_ids ]
+
+    dockings = compound.docking_set.all()
     target_labelled_dockings = [ (docking.pocket.target, docking) for docking in dockings]
     target_labelled_dockings.sort(key=lambda d: d[0].name)
 

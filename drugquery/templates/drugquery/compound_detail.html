@@ -8,33 +8,27 @@
     <div class="container">
         <div class="row">
             <br>
-            <!-- we have to take up 12 columns total, so each column needs to be width 4 -->
-            <!-- we'll make each col medium sized, so use class "col-md-4" -->
-            <div class="col-md-6">
-                <h1>{{ compound.get_name }}</h1>
-                <h5>{{ compound.smiles }}</h5>
-                <h5><form method="get" action="{% url 'drugquery:search_compounds' %}">
-                    <button class="btn btn-default btn-xs" name="smiles_query" type="submit" value="{{ compound.smiles }}">
-                        <span class="glyphicon glyphicon-search"></span> Search DrugQuery for similar compounds
-                    </button>
-                </form></h5>
 
-                <h5><form action="{% url 'drugquery:download_structure' compound.pk %}" method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <button class="btn btn-default btn-xs" type="submit">
-                        <span class="glyphicon glyphicon-download"></span>  Download 3D SDF structure
-                    </button>
-                </form></h5>
-
+            <div style='height:400px; width:600px' class='viewer_3Dmoljs'
+                 data-href="{{ compound.compound_sdf_file.url }}" data-backgroundcolor='0xffffff'
+                 data-style='stick'></div>
+            <br><div style="margin:0 auto; width:30%">
             </div>
 
-            <div class="col-md-6">
-                <div style='height:400px; width:600px' class='viewer_3Dmoljs'
-                     data-href="{{ compound.compound_sdf_file.url }}" data-backgroundcolor='0xffffff'
-                     data-style='stick'></div>
-                <br><div style="margin:0 auto; width:30%">
-                </div>
-            </div>
+            <h1>{{ compound.get_name }}</h1>
+            <h5>{{ compound.smiles }}</h5>
+            <h5><form method="get" action="{% url 'drugquery:search_compounds' %}">
+                <button class="btn btn-default btn-xs" name="smiles_query" type="submit" value="{{ compound.smiles }}">
+                    <span class="glyphicon glyphicon-search"></span> Search DrugQuery for similar compounds
+                </button>
+            </form></h5>
+
+            <h5><form action="{% url 'drugquery:download_structure' compound.pk %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <button class="btn btn-default btn-xs" type="submit">
+                    <span class="glyphicon glyphicon-download"></span>  Download SDF structure
+                </button>
+            </form></h5>
         </div>
 
         <div class="row">
@@ -55,7 +49,7 @@
                 <h5><form action="{% url 'drugquery:download_scores' compound.pk %}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <button class="btn btn-default btn-xs" type="submit" class="btn">
-                        <span class="glyphicon glyphicon-download"></span>  Download complete docking scores
+                        <span class="glyphicon glyphicon-download"></span>  Download docking scores
                     </button>
                 </form></h5>
             {% endif %}
@@ -103,9 +97,73 @@
         </div>
 
 
+        <div class="row">
+            <h2>Top 100 Predicted Targets</h2>
+
+            {% if predicted_targets.any %}
+
+
+                <h5><form action="{% url 'drugquery:download_top_dockings' compound.pk %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <button class="btn btn-default btn-xs" type="submit" class="btn">
+                        <span class="glyphicon glyphicon-download"></span>  Download TOP 100 dockings
+                    </button>
+                </form></h5>
+
+
+                <h5><form action="{% url 'drugquery:download_all_dockings' compound.pk %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <button class="btn btn-default btn-xs" type="submit" class="btn">
+                        <span class="glyphicon glyphicon-download"></span>  Download ALL dockings
+                    </button> (takes longer)
+                </form></h5>
+
+                <br>
+
+                <div style='height:550px; overflow:auto'>
+                    <table id="dockingTable" class="tablesorter table table-hover">
+                        <thead class="thead-inverse">
+                            <tr>
+                                <th><a href="">Gene</a></th>
+                                <th><a href="">Pdb</a></th>
+                                <th><a href="">Chain</a></th>
+                                <th><a href="">Pocket</a></th>
+                                <th><a href="">Score</a></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in predicted_targets %}
+                                <tr>
+                                    {% for cell in row %}
+                                        <td>{{ cell }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            {% else %}
+                Target predictions will become available once dockings for this compound are complete.
+            {% endif %}
+
+
+        </div>
+
+        <br><br><br><br>
+
     </div>
 
 
+    <!-- make the table sortable by column headers -->
+    <script language="javascript">
+        $(document).ready(function()
+            {
+                $("#dockingTable").tablesorter();
+            }
+        );
+    </script>
 
 
 

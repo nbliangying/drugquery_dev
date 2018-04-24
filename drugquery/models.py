@@ -292,7 +292,7 @@ class Compound(models.Model):
         self.score_file.save(score_file_name, score_file)
         # delete temporary file and save
         os.remove(tmp_score_file_path)
-        self.save()
+        self.save(recount=False)
 
 
     # functions to tell you which / how many pockets/ targets this cpd has been docked to

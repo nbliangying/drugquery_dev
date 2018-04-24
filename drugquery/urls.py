@@ -40,8 +40,10 @@ urlpatterns = [
     url(r'^queue/$', views.JobIndexView.as_view(), name='queue'),
 
     ### URLS FOR DOWNLOADING RESULTS
-    # drugquery/compounds/<pk>/download_dockings
-    url(r'^compounds/(?P<pk>[0-9]+)/download_dockings/$', views.downloadDockings, name="download_dockings"),
+    # drugquery/compounds/<pk>/download_all_dockings
+    url(r'^compounds/(?P<pk>[0-9]+)/download_all_dockings/$', views.downloadAllDockings, name="download_all_dockings"),
+    # drugquery/compounds/<pk>/download_top_dockings
+    url(r'^compounds/(?P<pk>[0-9]+)/download_top_dockings/$', views.downloadTopDockings, name="download_top_dockings"),
     # drugquery/compounds/<pk>/download_structure
     url(r'^compounds/(?P<pk>[0-9]+)/download_structure/$', views.downloadStructure, name="download_structure"),
     # drugquery/compounds/<pk>/download_scores
